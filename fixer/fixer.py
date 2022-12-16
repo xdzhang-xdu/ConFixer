@@ -10,10 +10,6 @@ import asyncio
 from datetime import datetime
 import logging
 
-from fixer.gflownet.generator.proxy.proxy_config import proxy_args
-from fixer.gflownet.generator.proxy.train_proxy import train_proxy
-from fixer.gflownet.generator.generative_model.main import generate_samples_with_gfn
-from fixer.gflownet.generator.pre_process.transform_actions import decode
 from fixer.lib.monitor import Monitor
 from fixer.path_config import path_args
 
@@ -201,34 +197,6 @@ def get_history_scenarios(session):
         dataset = json.load(file)
     return dataset
 
-
-def generate_scenarios_batch(dataset, session):
-    # Train model to generate new scenarios to files
-    while True:
-        train_proxy(proxy_args, dataset, session)
-        new_batch = generate_samples_with_gfn(dataset, session)
-        if len(new_batch) != 1:
-            break
-    # For debug
-    with open(path_args.new_batch_path.format(session), 'w', encoding='utf-8') as file:
-        json.dump(new_batch, file, indent=4)
-    #
-    test_cases_batch = []
-    for item in new_batch:
-        test_cases_batch.append(decode(item, session))
-    return test_cases_batch
-
-
-def debug_new_batch(session):
-    with open(path_args.new_batch_path.format(session)) as file:
-        dataset = json.load(file)
-    #
-    test_cases_batch = []
-    for item in dataset:
-        test_cases_batch.append(decode(item, session))
-    return test_cases_batch
-
-
 """
 For debugging single scenario
 """
@@ -268,30 +236,7 @@ def invoke_tester(testcase, specs, file_directory):
     return covered_specs
 
 
-def debug_session(session, testcases, remained_specs):
-    log_direct = path_args.debug_result_direct.format(session)
-    # Set testing result or data paths
-    if not os.path.exists(log_direct):
-        os.makedirs(log_direct)
-    # else:
-    #     shutil.rmtree(log_direct)
-    if not os.path.exists(log_direct + '/data'):
-        os.makedirs(log_direct + '/data')
-    # Set logger
-    logging_file = log_direct + '/test.log'
-    file_handler = logging.FileHandler(logging_file, mode='w')
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    logging.basicConfig(level=logging.INFO, handlers=[stdout_handler, file_handler],
-                        format='%(asctime)s, %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
-    logging.info("Current Session: {}".format(session))
 
-    for _ in range(100):
-        covered_specs = test_scenario_batch(testcases, remained_specs, log_direct)
-        if len(covered_specs) != 0:
-            print("Repay is successful.")
-            break
-        else:
-            print("Continue....")
 
 
 def run_bug_scenario(testcase, specs):
@@ -601,4 +546,3 @@ if __name__ == "__main__":
     target_spec = 'eventually(((direction==1)and(PriorityNPCAhead==1))and(always[0,2](not(speed<0.5))))'
     new_testcases = load_violation_testcases(target_spec, session)
     # print(len(new_testcases), new_testcases)
-    debug_session(session, new_testcases, [target_spec])

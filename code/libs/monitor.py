@@ -1,12 +1,11 @@
 import rtamt
 import sys
 import numpy as np
-from fixer.lib.TracePreprocess import Trace
+from code.libs.TracePreprocess import Trace
 import json
 import copy
 from shapely.geometry import Polygon, Point
-from fixer.lib import exception
-# from fixer.gflownet.lib.spec_coverage import failure_statement
+from code.libs import exception
 
 inf_value = 1000
 

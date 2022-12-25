@@ -1,8 +1,8 @@
 import copy
 
 from parser.ast import Parse
-from fixer.lib.TestCaseExtraction import AllTestCase
-from fixer.lib.AssertionExtraction import AllAssertions
+from code.libs.TestCaseExtraction import AllTestCase
+from code.libs.AssertionExtraction import AllAssertions
 
 
 class ExtractAll:

@@ -8,7 +8,7 @@ from setuptools import setup
 #  WARNING: The user site-packages directory is disabled.
 #  error: can't create or remove files in install directory
 #  ...
-#  [Errno 13] Permission denied: '/usr/local/lib/python3.6/dist-packages/<FILE>'
+#  [Errno 13] Permission denied: '/usr/local/libs/python3.6/dist-packages/<FILE>'
 #
 # Taken from https://github.com/pypa/pip/issues/7953#issuecomment-645133255.
 import site

@@ -6,9 +6,9 @@ from parser.ast import Parse
 import json
 import warnings
 import math
-from fixer.lib.config import get_npc_list, get_pedestrian_list, get_ego_list, get_map_list, get_weather_list
-from fixer.lib.map import get_map_info
-from fixer.lib.pedestrian_motion_checking import nearest
+from code.libs.config import get_npc_list, get_pedestrian_list, get_ego_list, get_map_list, get_weather_list
+from code.libs.map import get_map_info
+from code.libs.pedestrian_motion_checking import nearest
 
 npc_list = get_npc_list()
 pedestrian_list = get_pedestrian_list()

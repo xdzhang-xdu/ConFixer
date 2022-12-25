@@ -1,7 +1,7 @@
 import itertools
 import operator
 
-from fixer.lib.AssertionExtraction import AllAssertions, SingleAssertion
+from code.libs.AssertionExtraction import AllAssertions, SingleAssertion
 import copy
 from parser.ast import Parse
 

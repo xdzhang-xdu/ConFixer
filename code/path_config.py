@@ -5,9 +5,9 @@ class AttrDict(dict):
 path_args = AttrDict(
     {
         # testing result data
-        "test_result_direct": "/home/xdzhang/data/apollo7/active+max/{}",
+        "test_result_direct": "/home/xdzhang/data/apollo7/{}",
         "debug_result_direct": "/home/xdzhang/data/apollo7/debug/{}",
-        "spec_path": "rawdata/specs/spec_data.json",
+        "spec_path": "Specification/violation_formulae.json",
         # data for training
         "train_data_path": "generator/data/testset/a_testset_for_{}.json",
         # template for generating scenarios quickly

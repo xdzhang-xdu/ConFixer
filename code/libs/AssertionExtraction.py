@@ -5,8 +5,8 @@ from parser.ast.assertion.assertion import Traffic_Rule_Related_APIs, GeneralDis
 from parser.ast.base.state import Position, Coordinate
 from parser.ast.assertion.assertion import EgoState, AgentState, AgentGroundTruth
 from parser.ast.unresolved.unresolved import NameWithRealValue
-from fixer.lib import exception
-from fixer.lib.map import get_map_info
+from code.libs import exception
+from code.libs.map import get_map_info
 
 
 class AllAssertions:

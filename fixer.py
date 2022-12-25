@@ -10,8 +10,9 @@ import asyncio
 from datetime import datetime
 import logging
 
-from fixer.lib.monitor import Monitor
-from fixer.path_config import path_args
+from code.libs.monitor import Monitor
+# from libs.monitor import Monitor
+from code.path_config import path_args
 
 
 async def test_one_scenario(scenario_json, specs, covered_specs, reward, directory=None) -> object:
@@ -44,7 +45,7 @@ async def test_one_scenario(scenario_json, specs, covered_specs, reward, directo
             elif msg['TYPE'] == 'TEST_COMPLETED':
                 output_trace = msg['DATA']
                 dt_string = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-                file = directory + '/result-' + dt_string + '.json'
+                file = directory + '/trace/result-' + dt_string + '.json'
                 with open(file, 'w') as outfile:
                     json.dump(output_trace, outfile, indent=2)
                 logging.info("The number of states in the trace is {}".format(len(output_trace['trace'])))
@@ -245,8 +246,8 @@ def run_bug_scenario(testcase, specs):
         os.makedirs(log_directory)
     # else:
     #     shutil.rmtree(log_direct)
-    if not os.path.exists(log_directory + '/data'):
-        os.makedirs(log_directory + '/data')
+    if not os.path.exists(log_directory + '/trace'):
+        os.makedirs(log_directory + '/trace')
     # Set logger
     logging_file = log_directory + '/test.log'
     file_handler = logging.FileHandler(logging_file, mode='w')
@@ -312,7 +313,7 @@ def load_bug_scenarios(path):
 def analyze_bugs():
     start = datetime.now()
     # bug_scenarios = load_bug_scenarios()
-    bug_scenarios = load_bug_scenarios("/home/xdzhang/ABLE/test_cases/buggy_scenarios/T-Junction/Green_light_but_stop.json")
+    bug_scenarios = load_bug_scenarios("/home/xdzhang/test_log/test.json")
     all_specs, _ = load_specifications()
     bug_data = dict()
     for scenario_path, scenario_json in bug_scenarios.items():
@@ -320,21 +321,21 @@ def analyze_bugs():
         covered_specs = run_bug_scenario(scenario_json, all_specs)
         bug_data[scenario_path] = covered_specs
 
-    bug_data_path = "fix_data/path_specs.json"
+    bug_data_path = "code/fix_data/path_specs.json"
     with open(bug_data_path, 'w') as fp:
         json.dump(bug_data, fp)
     end = datetime.now()
     print("cost {}".format(end - start))
 
 def get_original_parameters():
-    para_path = "/home/xdzhang/ABLE/fixer/gflownet/fix_data/original_parameters.json"
+    para_path = "/home/xdzhang/ABLE/code/gflownet/fix_data/original_parameters.json"
     with open(para_path, "r") as f:
         data = json.load(f)
     return data
 
 
 def get_breaking_scenarios():
-    break_path = "/home/xdzhang/ABLE/fixer/gflownet/fix_data/breaking_scenarios.json"
+    break_path = "/home/xdzhang/ABLE/code/gflownet/fix_data/breaking_scenarios.json"
     with open(break_path, "r") as f:
         data = json.load(f)
     return data
@@ -506,8 +507,9 @@ def check_one_parameter_changing(original_parameters):
 
 
 def print_robust_for_scenarios():
-    data_path = "/home/xdzhang/test_log/data"
-    spec = "eventually(((trafficLightAheadcolor==3)and((eventually[0,2](NPCAheadspeed>0.5))and(NPCAheadAhead<=8.0)))and(always[0,3](not(speed>0.5))))"
+    data_path = "/home/xdzhang/test_log/data/accident"
+    # spec = "eventually(((trafficLightAheadcolor==3)and((eventually[0,2](NPCAheadspeed>0.5))and(NPCAheadAhead<=8.0)))and(always[0,3](not(speed>0.5))))"
+    spec = "eventually(NPCAheadAhead<=0)"
     for root, _, data_files in os.walk(data_path):
         for data_file in data_files:
             if not data_file.endswith('.json'):
@@ -534,8 +536,8 @@ if __name__ == "__main__":
     # print_robust_for_scenarios()
     # exit(12)
     analyze_bugs()
-    # fix_bugs()
-    # check_one_parameter_changing(get_original_parameters())
+    fix_bugs()
+    check_one_parameter_changing(get_original_parameters())
     exit(98)
 
 

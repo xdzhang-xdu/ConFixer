@@ -256,7 +256,7 @@ def run_bug_scenario(testcase, specs):
                         format='%(asctime)s, %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 
     covered_specs = set()
-    for i in range(5):
+    for i in range(1):
         print("Round {}".format(i))
         covered_specs_one = invoke_tester(testcase, specs, log_directory)
         print(covered_specs_one)
@@ -313,7 +313,7 @@ def load_bug_scenarios(path):
 def analyze_bugs():
     start = datetime.now()
     # bug_scenarios = load_bug_scenarios()
-    bug_scenarios = load_bug_scenarios("/home/xdzhang/test_log/test.json")
+    bug_scenarios = load_bug_scenarios("/home/xdzhang/ConFixer/test_cases/buggy_scenarios/T-Junction/Green_Light_Rush_Cause_Collisions2_bk.json")
     all_specs, _ = load_specifications()
     bug_data = dict()
     for scenario_path, scenario_json in bug_scenarios.items():
@@ -328,21 +328,24 @@ def analyze_bugs():
     print("cost {}".format(end - start))
 
 def get_original_parameters():
-    para_path = "/home/xdzhang/ABLE/code/gflownet/fix_data/original_parameters.json"
+    para_path = "code/fix_data/original_parameters.json"
     with open(para_path, "r") as f:
         data = json.load(f)
     return data
 
 
-def get_breaking_scenarios():
-    break_path = "/home/xdzhang/ABLE/code/gflownet/fix_data/breaking_scenarios.json"
+def get_breaking_scenarios(spec):
+    break_path = "code/fix_data/scenarios.json"
     with open(break_path, "r") as f:
         data = json.load(f)
-    return data
+    return data[spec]["breaking"]
 
 
-def get_passed_scenarios():
-    return dict()
+def get_passed_scenarios(spec):
+    break_path = "code/fix_data/scenarios.json"
+    with open(break_path, "r") as f:
+        data = json.load(f)
+    return data[spec]["passed"]
 
 
 def apply_change_to_ads(configuration):
@@ -361,9 +364,9 @@ def apply_change_to_ads(configuration):
     print("Applied change to ADS, and restarted the modules.")
 
 
-def is_harmless_and_relevant(passed_scenarios, breaking_scenarios):
+def is_harmless_and_relevant(spec, passed_scenarios, breaking_scenarios):
     print("Checking passed scenarios...")
-    for scenario_path, spec in passed_scenarios.items():
+    for scenario_path in passed_scenarios:
         with open(scenario_path, "r") as f:
             scenario_json = json.load(f)
         loop = asyncio.get_event_loop()
@@ -373,7 +376,7 @@ def is_harmless_and_relevant(passed_scenarios, breaking_scenarios):
 
     print("Checking breaking scenarios...")
     at_least_one = False
-    for scenario_path, spec in breaking_scenarios.items():
+    for scenario_path in breaking_scenarios:
         with open(scenario_path, "r") as f:
             scenario_json = json.load(f)
         loop = asyncio.get_event_loop()
@@ -385,16 +388,31 @@ def is_harmless_and_relevant(passed_scenarios, breaking_scenarios):
     return at_least_one
 
 
-def cause_analysis(original_parameters, passed_scenarios, breaking_scenarios):
+def cause_analysis(spec, original_parameters, passed_scenarios, breaking_scenarios):
     relevant_parameters = []
     for para, value in original_parameters.items():
+        # increase the value by 50%
+        changed_value = value * 1.5
+        changed_configuration = copy.deepcopy(original_parameters)
+        changed_configuration[para] = changed_value
+        apply_change_to_ads(changed_configuration)
+        print("### Verifying Parameter \"{}\" {} -> {}".format(para, value, changed_value))
+        if is_harmless_and_relevant(spec, passed_scenarios, breaking_scenarios):
+            # 1 indicates the fix direction is up.
+            relevant_parameters.append((para, 1))
+            continue
+
+        apply_change_to_ads(original_parameters)
+        # decrease the value by 50%
         changed_value = value * 0.5
         changed_configuration = copy.deepcopy(original_parameters)
         changed_configuration[para] = changed_value
         apply_change_to_ads(changed_configuration)
         print("### Verifying Parameter \"{}\" {} -> {}".format(para, value, changed_value))
-        if is_harmless_and_relevant(passed_scenarios, breaking_scenarios):
-            relevant_parameters.append((para, value))
+        if is_harmless_and_relevant(spec, passed_scenarios, breaking_scenarios):
+            # 1 indicates the fix direction is down.
+            relevant_parameters.append((para, -1))
+        apply_change_to_ads(original_parameters)
     return relevant_parameters
 
 
@@ -438,8 +456,34 @@ def compute_fitness(original_parameters, generation, breaking_scenarios):
         print(individual, "-- distance {}, fitness {}".format(distance, fitness))
         generation.append((individual[0], fitness))
 
+def misconfiguration_fix(spec, original_parameters, relevant_parameters, breaking_scenarios):
+    # fixes = dict()
+    for para, direction in relevant_parameters:
+        if direction == 1:
+            step = original_parameters[para] * 0.05
+            changed_value = original_parameters[para]
+            for _ in range(10):
+                changed_value = changed_value + step
+                changed_configuration = copy.deepcopy(original_parameters)
+                changed_configuration[para] = changed_value
+                apply_change_to_ads(changed_configuration)
 
-def misconfiguration_fix(original_parameters, relevant_parameters, breaking_scenarios):
+                at_least_one = True
+                for scenario_path in breaking_scenarios:
+                    with open(scenario_path, "r") as f:
+                        scenario_json = json.load(f)
+                    loop = asyncio.get_event_loop()
+                    flag, degree = loop.run_until_complete(
+                        law_complying_degree(scenario_json, spec, directory=log_directory))
+                    print("current change brings law complying degree: {}".format(degree))
+                    if flag is True and degree < 0.0:
+                        at_least_one = False
+
+                if at_least_one is True:
+                    print("Find out a fix {} -> {} for spec {}".format(original_parameters[para], changed_value, spec))
+                    break
+
+def misconfiguration_fix_based_ga(original_parameters, relevant_parameters, breaking_scenarios):
     # initialization
     generation = []
     for p in range(num_population):
@@ -471,15 +515,17 @@ def misconfiguration_fix(original_parameters, relevant_parameters, breaking_scen
 
 
 def fix_bugs():
-    breaking_scenarios = get_breaking_scenarios()
-    passed_scenarios = get_passed_scenarios()
+    spec = "eventually(((trafficLightAheadcolor==3)and((eventually[0,2](NPCAheadspeed>0.5))and(NPCAheadAhead<=8.0)))and(NPCAheadAhead<=0.5))"
+    breaking_scenarios = get_breaking_scenarios(spec)
+    passed_scenarios = get_passed_scenarios(spec)
+    # dict type, <para, value>
     original_parameters = get_original_parameters()
     print("Root cause analysis....")
-    relevant_parameters = cause_analysis(original_parameters, passed_scenarios, breaking_scenarios)
+    relevant_parameters = cause_analysis(spec, original_parameters, passed_scenarios, breaking_scenarios)
     # relevant_parameters = [('still_obstacle_speed_threshold', 0.99), ('still_pedestrian_speed_threshold', 0.2)]
     # apply_change_to_ads(dict(relevant_parameters))
     print("Misconfiguration fixing....")
-    misconfiguration_fix(original_parameters, relevant_parameters, breaking_scenarios)
+    misconfiguration_fix(spec, original_parameters, relevant_parameters, breaking_scenarios)
 
 
 def check_one_parameter_changing(original_parameters):
@@ -536,8 +582,8 @@ if __name__ == "__main__":
     # print_robust_for_scenarios()
     # exit(12)
     analyze_bugs()
-    fix_bugs()
-    check_one_parameter_changing(get_original_parameters())
+    # fix_bugs()
+    # check_one_parameter_changing(get_original_parameters())
     exit(98)
 
 

@@ -1,0 +1,9 @@
+{
+  "eventually(((trafficLightAheadcolor==3)and((eventually[0,2](NPCAheadspeed>0.5))and(NPCAheadAhead<=8.0)))and(NPCAheadAhead<=0.5))": {
+    "passed": [],
+    "breaking": ["/home/xdzhang/ConFixer/test_cases/buggy_scenarios/T-Junction/Green_Light_Rush_Cause_Collisions2.json",
+    "/home/xdzhang/ConFixer/test_cases/breaking_scenarios_by_ABLE/discovered_by_lawbreaker/apollo7/single_direction/sub_law_violation_41.json",
+    "/home/xdzhang/ConFixer/test_cases/breaking_scenarios_by_ABLE/discovered_by_lawbreaker/apollo7/t_junction/sub_law_violation_41.json",
+    "/home/xdzhang/ConFixer/test_cases/breaking_scenarios_by_ABLE/newly_discovered_by_able/apollo7/lane_change/sub_law_violation_41.json"]
+  }
+}

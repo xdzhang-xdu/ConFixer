@@ -256,7 +256,7 @@ def run_bug_scenario(testcase, specs):
                         format='%(asctime)s, %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 
     covered_specs = set()
-    for i in range(1):
+    for i in range(10):
         print("Round {}".format(i))
         covered_specs_one = invoke_tester(testcase, specs, log_directory)
         print(covered_specs_one)
@@ -313,7 +313,7 @@ def load_bug_scenarios(path):
 def analyze_bugs():
     start = datetime.now()
     # bug_scenarios = load_bug_scenarios()
-    bug_scenarios = load_bug_scenarios("/home/xdzhang/ConFixer/test_cases/buggy_scenarios/T-Junction/Green_Light_Rush_Cause_Collisions2_bk.json")
+    bug_scenarios = load_bug_scenarios("test_cases/buggy_scenarios/T-Junction/Green_Light_Rush_Cause_Collisions2_2.json")
     all_specs, _ = load_specifications()
     bug_data = dict()
     for scenario_path, scenario_json in bug_scenarios.items():

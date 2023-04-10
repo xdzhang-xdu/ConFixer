@@ -735,6 +735,7 @@ def for_map_convert_bin_to_json(_map):
 		lane = Parse_lane(map_lane)
 		_map_after_parser["laneList"] = lane
 	if hasattr(_map, "stop_sign"):
+		print("have stop signs!")
 		map_stop_sign = _map.stop_sign
 		stop_sign = Parse_stop_sign(map_stop_sign)
 		_map_after_parser["stopSignList"] = stop_sign	
@@ -792,7 +793,7 @@ def for_map_convert_bin_to_json(_map):
 
 if __name__ == '__main__':
 
-	map_name = "borregas_ave"
+	map_name = "san_francisco_correct"
 	f = open("original_map/"+map_name+"/base_map.bin", "rb")
 	# header = map_pb2.Header()
 	# header.ParseFromString(f.read())
@@ -804,7 +805,7 @@ if __name__ == '__main__':
 
 	_map_after_parser = for_map_convert_bin_to_json(_map)
 
-	file = 'map_after_process/' + map_name + '.json'
+	file = 'map_after_process/' + "san_francisco_correct" + '.json'
 
 	with open(file, 'w') as outfile:
 		json.dump(_map_after_parser, outfile)

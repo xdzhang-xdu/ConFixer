@@ -416,6 +416,7 @@ class Server:
                 'Planning',
                 'Camera',
                 'Traffic Light',
+                'Perception',
                 'Control'
             ]
         else:

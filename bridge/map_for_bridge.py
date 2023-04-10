@@ -127,6 +127,12 @@ class get_map_info:
                         stop_line_points = _i["stopLineList"][0]["segmentList"][0]["lineSegment"]["pointList"]
                     single_element["stop_line_points"] = stop_line_points
 
+                elif single_element["id"].find("stop_sign") != -1:
+                    single_element["type"] = "stopsign"
+                    stop_line_points = []
+                    if _i.__contains__("stopLineList"):                        
+                        stop_line_points = _i["stopLineList"][0]["segmentList"][0]["lineSegment"]["pointList"]
+                    single_element["stop_line_points"] = stop_line_points
                 else:
                     single_element["type"] = None
                 self.traffic_sign.append(single_element)

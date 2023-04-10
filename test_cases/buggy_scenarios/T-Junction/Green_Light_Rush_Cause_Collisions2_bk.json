@@ -201,6 +201,9 @@
   "pedestrianList": [],
   "obstacleList": [],
   "AgentNames": [
-    "npc2"
+    "npc1",
+    "npc2",
+    "npc3",
+    "npc4"
   ]
 }
